@@ -17,19 +17,20 @@ multiple cores compared with one core, then you may encounter the CMN issue.
 Steps to run
 =====================
 1. clone this repo and make
-2. change your application start command line to add 
+2. change your application start command line to add
    LD_PRELOAD=/home/cr/rui-shared/tools/slc_mitigation/user/mitigation.so
 3. if you want to mitigate kernel space SLC miss
    insmod ./kernel/mitigation-module.ko
 4. cd ./script
 5. do profiling, two ways, pmu or spe, just pick one. pids are the processes of your workload
-   sudo ./profile-pmu.sh pid1 pid2 
-   sudo ./profile-spe.sh pid1 pid2 
-6. do mitigation, user or kernel, pick one or both
+   NOTE, you need to let your application run with real load for a while and profiling with the load.
+   sudo ./profile-pmu.sh pid1 pid2
+   sudo ./profile-spe.sh pid1 pid2
+6. do mitigation, user or kernel, pick one or both depending on your application. For most cases, you just need to run user mitigation.
    sudo ./mitigate-user.py -p pid1 pid2 -s on
    sudo ./mitigate-kernel.py -s on
 7. if you want to tune cacahe invalidating interval, current default is 1000us
    sudo ./mitigate-user.py -i xxxx   //xxxx is number in us
    sudo ./mitigate-kernel.py -i xxxx   //xxxx is number in us
 
-You can check logs in /tmp/mitigation.log
+You can check logs in /tmp/mitigation.log for user mitigation  or kernel message for kernel mitigation.
