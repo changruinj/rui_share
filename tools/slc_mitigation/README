@@ -3,8 +3,15 @@ Intro
 =====================
 Mitigate high SLC miss rate issue caused by CMN700 bug.
 Before using this tool, you need to check if your workload met the issue!!
-https://confluence.arm.com/display/AST/Detect+Buggy+State+with+Watchpoint
 
+If following indicators are relatively high when running the application with 
+multiple cores compared with one core, then you may encounter the CMN issue. 
+
+    - Check if cmn0-CompData_SC/cmn0-MC_Reqs ratio is abnormally high. 
+        sudo perf stat -I 1000 -e arm_cmn_0/name=cmn0-CompData_SC,watchpoint_up,bynodeid=1,nodeid=160,wp_dev_sel=0,wp_chn_sel=3,wp_grp=0,wp_val=0x0000003910000000,wp_mask=0xffffff80c3ffffff/  -e arm_cmn_0/name=cmn0-MC_Reqs,hnf_mc_reqs,nodeid=160,bynodeid=1/
+
+    - Check SLC miss rate, should be high. 
+        sudo perf stat -I 1000 -e arm_cmn_0/hnf_cache_miss/,arm_cmn_0/hnf_slc_sf_cache_access/
 
 =====================
 Steps to run
