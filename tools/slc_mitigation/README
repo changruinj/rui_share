@@ -34,3 +34,5 @@ Steps to run
    sudo ./mitigate-kernel.py -i xxxx   //xxxx is number in us
 
 You can check logs in /tmp/mitigation.log for user mitigation  or kernel message for kernel mitigation.
+If mitigation is in progress, you may see:
+[2024-11-20 14:42:10] 463919=====finished 10000 round  sleep 1000 us=======
