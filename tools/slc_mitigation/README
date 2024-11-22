@@ -1,6 +1,8 @@
 =====================
 Intro
 =====================
+THIS IS JUST A EXPERIMENTAL TOOL!
+
 Mitigate high SLC miss rate issue caused by CMN700 bug.
 Before using this tool, you need to check if your workload met the issue!!
 
