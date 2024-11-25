@@ -29,7 +29,7 @@ typedef struct {
 } AddressBuffers;
 
 // Function to log a formatted message to the log file
-void log_message(int log_fd, const char *format, ...) {
+void mitigate_log_message(int log_fd, const char *format, ...) {
     // Get the current timestamp
     char timestamp[20];
     time_t now = time(NULL);
@@ -62,16 +62,16 @@ static void* mitigation_thread(void* args)
         return NULL;
     }
 
-    log_message(log_fd, "\n\n\n");
-    log_message(log_fd, "=====================================\n");
-    log_message(log_fd, "=    mitigation_thread started      =\n");
-    log_message(log_fd, "=====================================\n");
+    mitigate_log_message(log_fd, "\n\n\n");
+    mitigate_log_message(log_fd, "=====================================\n");
+    mitigate_log_message(log_fd, "=    mitigation_thread started      =\n");
+    mitigate_log_message(log_fd, "=====================================\n");
 
     // Check if the file exists
     if (access(addr_file, F_OK) != -1) {
         // File exists, attempt to delete it
         if (remove(addr_file) == 0) {
-            log_message(log_fd, "The file %s was deleted successfully.\n", addr_file);
+            mitigate_log_message(log_fd, "The file %s was deleted successfully.\n", addr_file);
         } else {
             perror("Error deleting the file");
         }
@@ -115,12 +115,12 @@ static void* mitigation_thread(void* args)
     {
 	if (!addr_buffer->mitigation_start)
 	{
-            //log_message(log_fd, "=====NOT started=======\n");
+            //mitigate_log_message(log_fd, "=====NOT started=======\n");
             sleep(1);
 	}
 	else
 	{
-            //log_message(log_fd, "=====started=======\n");
+            //mitigate_log_message(log_fd, "=====started=======\n");
             if (addr_buffer->clean_interval != 0)
             {
                 clean_interval = addr_buffer->clean_interval;
@@ -132,7 +132,7 @@ static void* mitigation_thread(void* args)
             for (int i = 0; i < size; ++i) 
             {
                 asm volatile("dc civac, %0" : : "r" (buffer[i]) : "memory");
-                //log_message(log_fd, "%lx\n",buffer[i]);
+                //mitigate_log_message(log_fd, "%lx\n",buffer[i]);
             }
     
             asm volatile("dsb ish" : : : "memory");
@@ -142,7 +142,7 @@ static void* mitigation_thread(void* args)
             if (count++ == 10000)
             {
                 count = 0;
-                log_message(log_fd, "=====finished 10000 round  sleep %d us=======\n", clean_interval);
+                mitigate_log_message(log_fd, "=====finished 10000 round  sleep %d us=======\n", clean_interval);
             }
 	}
     }
