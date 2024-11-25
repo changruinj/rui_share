@@ -29,7 +29,7 @@ typedef struct {
 } AddressBuffers;
 
 // Function to log a formatted message to the log file
-void mitigate_log_message(int log_fd, const char *format, ...) {
+static void mitigate_log_message(int log_fd, const char *format, ...) {
     // Get the current timestamp
     char timestamp[20];
     time_t now = time(NULL);
