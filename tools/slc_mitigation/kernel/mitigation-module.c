@@ -1,8 +1,3 @@
-/*
- TODO: check why sys fs parameter interval and switch_state do not work
-*/
-
-
 #include <linux/version.h>
 #include <linux/module.h> 
 #include <linux/kernel.h>
@@ -93,15 +88,13 @@ static int mitigate_mmap(struct file *file, struct vm_area_struct *vma) {
 
     //pr_info("=====mmap get in\n");
 
-    if (size > mem_size)
-    {
+    if (size > mem_size) {
         pr_err("Request size %lx bigger than allocated size %lx\n", size, mem_size);
         return -EINVAL;
     }
     vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
     if (remap_pfn_range(vma, vma->vm_start, virt_to_phys(mitigation_data) >> PAGE_SHIFT, 
-            size, vma->vm_page_prot))
-    {
+            size, vma->vm_page_prot)) {
         pr_err("Failed to map io memory\n");
         return -EAGAIN;
     }
@@ -151,26 +144,21 @@ static int mitigation_thread(void* args)
     uint32_t count=0;
     uint64_t i = 0; 
 
-    while (!kthread_should_stop()) 
-    {
-        if (!mitigation_data->mitigation_start)
-        {
+    while (!kthread_should_stop()) {
+        if (!mitigation_data->mitigation_start) {
             //pr_info("=====NOT started=======\n");
             msleep(1000);
         }
-        else
-        {
+        else {
             //pr_info("=====started=======\n");
-            if (mitigation_data->clean_interval != 0)
-            {
+            if (mitigation_data->clean_interval != 0) {
                 clean_interval = mitigation_data->clean_interval;
             }
 
             size = mitigation_data->valid_size1;
             asm volatile("dsb ish" : : : "memory");
    
-            for (i = 0; i < size; ++i) 
-            {
+            for (i = 0; i < size; ++i) {
                 asm volatile("dc civac, %0" : : "r" (buffer[i]) : "memory");
 	//	if (i/100==0)
 	//	{pr_info("=====%lld %llx======\n", i, buffer[i]);}
@@ -181,8 +169,7 @@ static int mitigation_thread(void* args)
     
             usleep_range(clean_interval, clean_interval+1);
 
-            if (count++ == 10000)
-            {
+            if (count++ == 10000) {
                 count = 0;
                 pr_info("=====finished 10000 round  sleep %d us=======\n", clean_interval);
             }

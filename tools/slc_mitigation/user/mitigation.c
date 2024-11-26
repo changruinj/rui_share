@@ -111,26 +111,21 @@ static void* mitigation_thread(void* args)
 
     uint32_t count=0;
 
-    while (1) 
-    {
-	if (!addr_buffer->mitigation_start)
-	{
+    while (1) {
+	if (!addr_buffer->mitigation_start) {
             //mitigate_log_message(log_fd, "=====NOT started=======\n");
             sleep(1);
 	}
-	else
-	{
+	else {
             //mitigate_log_message(log_fd, "=====started=======\n");
-            if (addr_buffer->clean_interval != 0)
-            {
+            if (addr_buffer->clean_interval != 0) {
                 clean_interval = addr_buffer->clean_interval;
             }
 
             size = addr_buffer->valid_size1;
             asm volatile("dsb ish" : : : "memory");
     
-            for (int i = 0; i < size; ++i) 
-            {
+            for (int i = 0; i < size; ++i) {
                 asm volatile("dc civac, %0" : : "r" (buffer[i]) : "memory");
                 //mitigate_log_message(log_fd, "%lx\n",buffer[i]);
             }
@@ -139,8 +134,7 @@ static void* mitigation_thread(void* args)
             asm volatile("isb" : : : "memory");
     
        	    usleep(clean_interval);
-            if (count++ == 10000)
-            {
+            if (count++ == 10000) {
                 count = 0;
                 mitigate_log_message(log_fd, "=====finished 10000 round  sleep %d us=======\n", clean_interval);
             }
