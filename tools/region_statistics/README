@@ -1,0 +1,81 @@
+==============
+spe-region.py:
+
+Do some statistics of region info out of data captured from perf SPE
+- Calculate code heat for each region
+- Calculate branch jump relation between each region
+
+
+How to run:
+
+1. Captuer SPE data. The time to capture (sleep 2) can be tuned base the captured data size. 
+       perf record --no-switch-events  -e 'arm_spe_0/jitter=1/' -c 2048 -N  -p $pid -- sleep 2
+2. Prepare spe-parser tool 
+       install tools/spe_parser from https://gitlab.arm.com/telemetry-solution/telemetry-solution
+3. Put perf.data file from step 1 to this folder
+4. Run this tool
+       ./spe-region.py perf.data
+
+
+==============
+region_map.py
+
+Map java compiled code to 2MB regions spaces
+
+
+How to run:
+
+1. If your JVM support "jcmd <pid> Compiler.perfmap", just run that command generate map file.
+   If not, run step a~d.
+a. Get perf-map-agent form https://github.com/jvm-profiling-tools/perf-map-agent.git
+b. Make this change:
+     root@lnd-zte-04:/home/cr/perf-map-agent# git diff
+     diff --git a/src/c/perf-map-agent.c b/src/c/perf-map-agent.c
+     index a5dea76..561b025 100644
+     --- a/src/c/perf-map-agent.c
+     +++ b/src/c/perf-map-agent.c
+     @@ -368,3 +368,35 @@ Agent_OnAttach(JavaVM *vm, char *options, void *reserved) {
+          return 0;
+      }
+      
+     +JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
+     +    open_map_file();
+     +
+     +    if (options == NULL) {
+     +        options = "";
+     +    }
+     +    unfold_simple = strstr(options, "unfoldsimple") != NULL;
+     +    unfold_all = strstr(options, "unfoldall") != NULL;
+     +    unfold_inlined_methods = strstr(options, "unfold") != NULL || unfold_simple || unfold_all;
+     +    print_method_signatures = strstr(options, "msig") != NULL;
+     +    print_source_loc = strstr(options, "sourcepos") != NULL;
+     +    dotted_class_names = strstr(options, "dottedclass") != NULL;
+     +    clean_class_names = strstr(options, "cleanclass") != NULL;
+     +    annotate_java_frames = strstr(options, "annotate_java_frames") != NULL;
+     +
+     +    bool use_semicolon_unfold_delimiter = strstr(options, "use_semicolon_unfold_delimiter") != NULL;
+     +    unfold_delimiter = use_semicolon_unfold_delimiter ? ";" : "->";
+     +
+     +    debug_dump_unfold_entries = strstr(options, "debug_dump_unfold_entries") != NULL;
+     +
+     +    jvmtiEnv *jvmti;
+     +    (*vm)->GetEnv(vm, (void **)&jvmti, JVMTI_VERSION_1);
+     +    enable_capabilities(jvmti);
+     +    set_callbacks(jvmti);
+     +    set_notification_mode(jvmti, JVMTI_ENABLE);
+     +    (*jvmti)->GenerateEvents(jvmti, JVMTI_EVENT_DYNAMIC_CODE_GENERATED);
+     +    (*jvmti)->GenerateEvents(jvmti, JVMTI_EVENT_COMPILED_METHOD_LOAD);
+     +    set_notification_mode(jvmti, JVMTI_DISABLE);
+     +    close_map_file();
+     +
+     +    return 0;
+     +}
+c. Compile perf-map-agent
+     cmake .
+     make
+d. Run java application and generate function map file
+     java -agentpath:/path/to/libperfmap.so -jar your-application.jar
+     ./bin/create-java-perf-map.sh <pid>
+     the map file is in /tmp/perf-<pid>.map
+2. Use region_map.py to generate svg file for code mapping in regions
+     ./region_map.py /tmp/perf-<pid>.map perf-<pid>.svg
